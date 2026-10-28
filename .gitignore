@@ -1,0 +1,11 @@
+# Pliki systemowe Windowsa i macOS — nie są częścią aplikacji
+desktop.ini
+Thumbs.db
+.DS_Store
+
+# Ustawienia edytorów
+.vscode/
+.idea/
+
+# Ustawienia lokalne Claude Code (tylko na tym komputerze)
+.claude/settings.local.json
