@@ -103,7 +103,6 @@
     display:flex; align-items:center; gap:6px; white-space:nowrap;
   }
   .mode-dot{width:7px; height:7px; border-radius:50%; background:var(--ink-faint); flex:none;}
-  .mode-badge[data-m="db"] .mode-dot{background:var(--ok);}
   .mode-badge[data-m="local"] .mode-dot{background:var(--accent-2);}
   .mode-badge[data-m="demo"] .mode-dot{background:var(--warn);}
 

@@ -26,7 +26,7 @@ Karol, 18 lat, uczy się programowania (podstawy JavaScript). Pracuje w warsztac
 ### Etap 1 — porządek i PWA
 - [x] Zainicjować git.
 - [x] Rozdzielić `index.html` na `index.html`, `style.css`, `app.js`.
-- [ ] Usunąć zależność od `window.claude` (to działało tylko w artefakcie Claude) — zostaje `localStorage`.
+- [x] Usunąć zależność od `window.claude` (to działało tylko w artefakcie Claude) — zostaje `localStorage`.
 - [ ] Dodać `manifest.json` i ikonę, żeby dało się „dodać do ekranu głównego”.
 - [ ] Dodać service worker — działanie offline.
 - [ ] Wrzucić na darmowy hosting (Netlify lub GitHub Pages).

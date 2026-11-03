@@ -133,7 +133,6 @@
   function genId(){ return 'id-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8); }
   function clamp(n,a,b){ return Math.max(a, Math.min(b,n)); }
   function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
-  function withoutId(obj){ var o=Object.assign({},obj); delete o.id; return o; }
 
   function showToast(msg, isError){
     var el = document.getElementById('toastEl');
@@ -147,7 +146,7 @@
     clearTimeout(el._toastTimer);
     el._toastTimer = setTimeout(function(){ el.classList.remove('toast-show'); }, 3400);
   }
-  function showDbError(e){
+  function showSaveError(e){
     showToast('Nie udało się zapisać zmian' + (e && e.message ? (': '+e.message) : '') + '. Spróbuj ponownie.', true);
   }
 
@@ -252,7 +251,7 @@
   /* ============ STATE ============ */
   var demo = buildDemo();
   var state = {
-    mode:'demo',               // 'demo' | 'local' | 'db'
+    mode:'demo',               // 'demo' | 'local'
     vehicles: demo.vehicles,
     itemsByVehicle: demo.items,
     selectedId: demo.vehicles[0].id,
@@ -261,7 +260,6 @@
   };
 
   var LS_KEY = 'ksiazka-serwisowa:v1';
-  var dbHandle = null, dbRefs = {vehicles:null}, unsubVehicles=null, unsubItems=null;
 
   function selectedVehicle(){
     var i; for(i=0;i<state.vehicles.length;i++){ if(state.vehicles[i].id===state.selectedId) return state.vehicles[i]; }
@@ -275,7 +273,8 @@
 
   /* ============ PERSISTENCE: LOCAL ============ */
   function persistLocal(){
-    try{ localStorage.setItem(LS_KEY, JSON.stringify({vehicles:state.vehicles, itemsByVehicle:state.itemsByVehicle})); }catch(e){}
+    // Zapis może się nie udać, np. gdy w przeglądarce brakuje miejsca — wtedy pokazujemy komunikat
+    try{ localStorage.setItem(LS_KEY, JSON.stringify({vehicles:state.vehicles, itemsByVehicle:state.itemsByVehicle})); }catch(e){ showSaveError(e); }
   }
   function loadLocalIfAny(){
     try{
@@ -298,18 +297,8 @@
     document.getElementById('modeBadgeText').textContent = label;
   }
 
-  function initBackend(){
-    if(typeof window.claude === 'undefined' || typeof window.claude.use !== 'function'){
-      fallbackToLocal();
-      return;
-    }
-    window.claude.use('db').then(function(db){
-      if(db){ attachDb(db); }
-      else { fallbackToLocal(); }
-    }).catch(function(){ fallbackToLocal(); });
-  }
-
-  function fallbackToLocal(){
+  // Przy starcie wczytujemy dane zapisane w przeglądarce (albo zaczynamy od pustej listy)
+  function initStorage(){
     var had = loadLocalIfAny();
     if(had){
       setMode('local','Zapisane lokalnie w tej przeglądarce');
@@ -322,122 +311,57 @@
     render();
   }
 
-  function attachDb(db){
-    dbHandle = db;
-    setMode('db','Zapisywane na koncie Claude');
-    dbRefs.vehicles = db.collection('vehicles');
-    unsubVehicles = dbRefs.vehicles.onSnapshot(function(snap){
-      var list = [];
-      snap.docs.forEach(function(d){ list.push(Object.assign({}, d.data(), {id:d.id})); });
-      list.sort(function(a,b){ return (a.createdAt||0)-(b.createdAt||0); });
-      state.vehicles = list;
-      if(!state.selectedId || !list.some(function(v){return v.id===state.selectedId;})){
-        state.selectedId = list.length ? list[0].id : null;
-        subscribeItems();
-      }
-      render();
-    }, function(){ fallbackToLocal(); });
-    subscribeItems();
-  }
-
-  function subscribeItems(){
-    if(unsubItems){ unsubItems(); unsubItems=null; }
-    var v = selectedVehicle();
-    if(!dbHandle || !v){ render(); return; }
-    var ref = dbHandle.doc('vehicles/'+v.id).collection('items');
-    unsubItems = ref.onSnapshot(function(snap){
-      var list = [];
-      snap.docs.forEach(function(d){ list.push(Object.assign({}, d.data(), {id:d.id})); });
-      state.itemsByVehicle[v.id] = list;
-      render();
-    }, function(){});
-  }
-
   /* ============ STORE (CRUD) ============
-     Every mutation updates local state and re-renders immediately
-     (optimistic), then persists in the background. This keeps the UI
-     responsive even if a db write is slow or rejected — a failure just
-     shows a toast instead of silently doing nothing. */
+     Każda zmiana najpierw poprawia dane w pamięci (state), potem zapisuje
+     je w przeglądarce i odświeża ekran. Zapis działa tylko w trybie 'local',
+     żeby przez chwilę po starcie nie nadpisać danych danymi przykładowymi. */
   var Store = {
     addVehicle: function(data){
       data.createdAt = Date.now();
-      var ref = (state.mode==='db') ? dbRefs.vehicles.doc() : null;
-      var id = ref ? ref.id : genId();
+      var id = genId();
       data.id = id;
       state.vehicles.push(data);
       state.itemsByVehicle[id] = [];
       state.selectedId = id;
-      if(ref){
-        subscribeItems();
-        ref.set(withoutId(data)).catch(showDbError);
-      } else if(state.mode==='local'){
-        persistLocal();
-      }
+      if(state.mode==='local') persistLocal();
       render();
     },
     updateVehicle: function(id, patch){
       var v = state.vehicles.find(function(x){return x.id===id;});
       if(v) Object.assign(v, patch);
-      if(state.mode==='db'){
-        dbHandle.doc('vehicles/'+id).update(patch).catch(showDbError);
-      } else if(state.mode==='local'){
-        persistLocal();
-      }
+      if(state.mode==='local') persistLocal();
       render();
     },
     deleteVehicle: function(id){
-      var items = state.itemsByVehicle[id]||[];
       state.vehicles = state.vehicles.filter(function(v){return v.id!==id;});
       delete state.itemsByVehicle[id];
-      var wasSelected = state.selectedId===id;
-      if(wasSelected) state.selectedId = state.vehicles.length ? state.vehicles[0].id : null;
-      if(state.mode==='db'){
-        items.forEach(function(it){ dbHandle.doc('vehicles/'+id+'/items/'+it.id).delete().catch(function(){}); });
-        dbHandle.doc('vehicles/'+id).delete().catch(showDbError);
-        if(wasSelected) subscribeItems();
-      } else if(state.mode==='local'){
-        persistLocal();
-      }
+      if(state.selectedId===id) state.selectedId = state.vehicles.length ? state.vehicles[0].id : null;
+      if(state.mode==='local') persistLocal();
       render();
     },
     addItem: function(vehicleId, data){
       data.createdAt = Date.now();
-      var ref = (state.mode==='db') ? dbHandle.doc('vehicles/'+vehicleId).collection('items').doc() : null;
-      var id = ref ? ref.id : genId();
-      data.id = id;
+      data.id = genId();
       (state.itemsByVehicle[vehicleId]=state.itemsByVehicle[vehicleId]||[]).push(data);
-      if(ref){
-        ref.set(withoutId(data)).catch(showDbError);
-      } else if(state.mode==='local'){
-        persistLocal();
-      }
+      if(state.mode==='local') persistLocal();
       render();
     },
     updateItem: function(vehicleId, itemId, patch){
       var arr = state.itemsByVehicle[vehicleId]||[];
       var it = arr.find(function(x){return x.id===itemId;});
       if(it) Object.assign(it, patch);
-      if(state.mode==='db'){
-        dbHandle.doc('vehicles/'+vehicleId+'/items/'+itemId).update(patch).catch(showDbError);
-      } else if(state.mode==='local'){
-        persistLocal();
-      }
+      if(state.mode==='local') persistLocal();
       render();
     },
     deleteItem: function(vehicleId, itemId){
       state.itemsByVehicle[vehicleId] = (state.itemsByVehicle[vehicleId]||[]).filter(function(x){return x.id!==itemId;});
-      if(state.mode==='db'){
-        dbHandle.doc('vehicles/'+vehicleId+'/items/'+itemId).delete().catch(showDbError);
-      } else if(state.mode==='local'){
-        persistLocal();
-      }
+      if(state.mode==='local') persistLocal();
       render();
     }
   };
 
   function selectVehicle(id){
     state.selectedId = id;
-    if(state.mode==='db'){ subscribeItems(); }
     render();
   }
 
@@ -860,5 +784,5 @@
 
   /* ============ INIT ============ */
   render();
-  initBackend();
+  initStorage();
 })();
