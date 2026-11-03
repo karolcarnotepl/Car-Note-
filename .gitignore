@@ -9,3 +9,4 @@ Thumbs.db
 
 # Ustawienia lokalne Claude Code (tylko na tym komputerze)
 .claude/settings.local.json
+.claude/launch.json

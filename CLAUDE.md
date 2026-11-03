@@ -5,7 +5,7 @@ Aplikacja do prowadzenia historii serwisowej pojazdów. Docelowo dla dwóch grup
 - **Kierowcy prywatni** — własne auta, przypomnienia o serwisie, historia i koszty.
 - **Warsztaty** — klienci, ich auta, wpisy serwisowe, które trafiają do książki klienta.
 
-Obecnie cała aplikacja to jeden plik `index.html` (HTML + CSS + JavaScript).
+Aplikacja składa się z trzech plików: `index.html` (układ strony), `style.css` (wygląd), `app.js` (logika).
 Dane zapisują się w `localStorage` przeglądarki.
 
 ## O autorze
@@ -25,7 +25,7 @@ Karol, 18 lat, uczy się programowania (podstawy JavaScript). Pracuje w warsztac
 
 ### Etap 1 — porządek i PWA
 - [x] Zainicjować git.
-- [ ] Rozdzielić `index.html` na `index.html`, `style.css`, `app.js`.
+- [x] Rozdzielić `index.html` na `index.html`, `style.css`, `app.js`.
 - [ ] Usunąć zależność od `window.claude` (to działało tylko w artefakcie Claude) — zostaje `localStorage`.
 - [ ] Dodać `manifest.json` i ikonę, żeby dało się „dodać do ekranu głównego”.
 - [ ] Dodać service worker — działanie offline.
