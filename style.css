@@ -89,7 +89,8 @@
   .app{max-width:980px; margin:0 auto; padding:22px 18px 72px;}
 
   /* ---------- topbar ---------- */
-  .topbar{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px;}
+  /* flex-wrap: na wąskim ekranie napis o zapisie przechodzi pod tytuł, zamiast wychodzić poza ekran */
+  .topbar{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px;}
   .brand{display:flex; align-items:center; gap:10px;}
   .brand-mark{width:34px; height:34px; border-radius:8px; background:var(--ink); color:var(--bg); display:flex; align-items:center; justify-content:center; flex:none;}
   .brand-mark svg{width:20px; height:20px;}
