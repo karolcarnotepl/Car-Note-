@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Ikona Car Note: litery C i N nałożone na siebie, na tle otwartego notatnika -->
+  <!-- Tło: ciemny granat, na całą powierzchnię (Android sam przycina do koła/kwadratu) -->
+  <rect width="512" height="512" fill="#14213D"/>
+
+  <!-- Otwarty notatnik: sam złoty obrys, bez wypełnienia.
+       Wszystko mieści się w środkowej „bezpiecznej strefie”, żeby nic nie zostało ucięte. -->
+  <g fill="none" stroke="#D4AF37" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M256 172 C 214 146, 160 142, 112 156 L 112 362 C 160 348, 214 352, 256 378"/>
+    <path d="M256 172 C 298 146, 352 142, 400 156 L 400 362 C 352 348, 298 352, 256 378"/>
+    <line x1="256" y1="172" x2="256" y2="378"/>
+  </g>
+
+  <!-- Litery: duże C pod spodem, N nałożone na środek.
+       Czarne wypełnienie + złoty kontur, żeby było je widać na granatowym tle.
+       paint-order="stroke" rysuje kontur pod wypełnieniem — N zakrywa C tam, gdzie się nakładają. -->
+  <g font-family="Georgia, 'Times New Roman', serif" font-weight="700" text-anchor="middle"
+     fill="#111111" stroke="#D4AF37" stroke-width="12" stroke-linejoin="round" paint-order="stroke">
+    <text x="250" y="352" font-size="270">C</text>
+    <text x="262" y="325" font-size="170">N</text>
+  </g>
+</svg>

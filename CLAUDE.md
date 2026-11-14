@@ -1,4 +1,4 @@
-# Książka Serwisowa — instrukcja projektu
+# Car Note (dawniej „Książka Serwisowa”) — instrukcja projektu
 
 ## Co budujemy
 Aplikacja do prowadzenia historii serwisowej pojazdów. Docelowo dla dwóch grup:
@@ -6,6 +6,7 @@ Aplikacja do prowadzenia historii serwisowej pojazdów. Docelowo dla dwóch grup
 - **Warsztaty** — klienci, ich auta, wpisy serwisowe, które trafiają do książki klienta.
 
 Aplikacja składa się z trzech plików: `index.html` (układ strony), `style.css` (wygląd), `app.js` (logika).
+Do tego `manifest.json` i folder `icons/` (`icon.svg` to oryginał ikony, z niego powstają pliki PNG).
 Dane zapisują się w `localStorage` przeglądarki.
 
 ## O autorze
@@ -27,7 +28,7 @@ Karol, 18 lat, uczy się programowania (podstawy JavaScript). Pracuje w warsztac
 - [x] Zainicjować git.
 - [x] Rozdzielić `index.html` na `index.html`, `style.css`, `app.js`.
 - [x] Usunąć zależność od `window.claude` (to działało tylko w artefakcie Claude) — zostaje `localStorage`.
-- [ ] Dodać `manifest.json` i ikonę, żeby dało się „dodać do ekranu głównego”.
+- [x] Dodać `manifest.json` i ikonę, żeby dało się „dodać do ekranu głównego”.
 - [ ] Dodać service worker — działanie offline.
 - [ ] Wrzucić na darmowy hosting (Netlify lub GitHub Pages).
 
