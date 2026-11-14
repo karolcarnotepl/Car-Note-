@@ -785,4 +785,13 @@
   /* ============ INIT ============ */
   render();
   initStorage();
+
+  /* ============ OFFLINE ============
+     Uruchamiamy service worker (plik sw.js), który pozwala otworzyć aplikację bez internetu.
+     Starsze przeglądarki go nie znają — wtedy aplikacja działa normalnie, tylko bez trybu offline. */
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('sw.js').catch(function(){});
+    });
+  }
 })();
