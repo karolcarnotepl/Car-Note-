@@ -31,7 +31,9 @@ Karol, 18 lat, uczy się programowania (podstawy JavaScript). Pracuje w warsztac
 - [x] Usunąć zależność od `window.claude` (to działało tylko w artefakcie Claude) — zostaje `localStorage`.
 - [x] Dodać `manifest.json` i ikonę, żeby dało się „dodać do ekranu głównego”.
 - [x] Dodać service worker — działanie offline.
-- [ ] Wrzucić na darmowy hosting (Netlify lub GitHub Pages).
+- [x] Wrzucić na darmowy hosting (Netlify lub GitHub Pages).
+  Adres: https://karolcarnotepl.github.io/Car-Note-/ — repozytorium: https://github.com/karolcarnotepl/Car-Note-
+  Aktualizacja strony: `git push` (GitHub Pages sam publikuje gałąź `main` w ok. minutę).
 
 ### Etap 2 — brakujące funkcje dla kierowcy
 - [ ] Pełna historia każdej pozycji (wszystkie wymiany, nie tylko ostatnia).
@@ -55,4 +57,4 @@ Karol, 18 lat, uczy się programowania (podstawy JavaScript). Pracuje w warsztac
 - [ ] Opakowanie w Capacitor i wydanie na Androida.
 
 ## Aktualny etap
-Etap 1.
+Etap 2 (Etap 1 zakończony).
