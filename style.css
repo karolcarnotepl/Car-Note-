@@ -91,8 +91,10 @@
   /* ---------- topbar ---------- */
   .topbar{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px;}
   .brand{display:flex; align-items:center; gap:10px;}
-  .brand-mark{width:34px; height:34px; border-radius:8px; background:var(--ink); color:var(--bg); display:flex; align-items:center; justify-content:center; flex:none;}
-  .brand-mark svg{width:20px; height:20px;}
+  /* Ikona ma szeroką ramkę tła (potrzebną na telefonie), więc w małym logo
+     powiększamy ją, a nadmiar przycina overflow:hidden — monogram jest wtedy lepiej widoczny */
+  .brand-mark{width:40px; height:40px; border-radius:9px; overflow:hidden; flex:none; background:#14213D;}
+  .brand-mark img{width:100%; height:100%; display:block; transform:scale(1.5);}
   .brand h1{
     font-family:var(--font-display); font-weight:700; font-size:26px; letter-spacing:.01em;
     text-transform:uppercase; margin:0; line-height:1;
