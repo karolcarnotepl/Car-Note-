@@ -234,6 +234,15 @@
   .icon-btn.done:hover{background:var(--ok-soft);}
   .icon-btn.danger:hover{background:var(--danger-soft); color:var(--danger); border-color:var(--danger-soft);}
 
+  /* lista w oknie „Historia” */
+  .history-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column;}
+  .history-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:9px 2px; border-bottom:1px solid var(--line);
+    font-family:var(--font-mono); font-size:13px; font-variant-numeric:tabular-nums;
+  }
+  .history-row:last-child{border-bottom:none;}
+
   @media (max-width:760px){
     .item-row{grid-template-columns: 1fr; gap:6px; padding:14px 6px;}
     .item-actions{justify-self:flex-start; margin-top:4px;}

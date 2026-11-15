@@ -22,6 +22,9 @@ Karol, 18 lat, uczy się programowania (podstawy JavaScript). Pracuje w warsztac
 - Mobile-first: aplikacja ma dobrze działać na telefonie.
 - Interfejs po polsku. Jednostki: km, PLN, daty DD.MM.RRRR.
 - Kod czytelny, z komentarzami po polsku w trudniejszych miejscach.
+- Pisz najprostszy kod, który działa. Nie dodawaj abstrakcji, warstw ani funkcji „na przyszłość”.
+- Zanim dodasz nową bibliotekę lub nowy plik, sprawdź, czy da się to zrobić istniejącym kodem albo tym, co ma przeglądarka.
+- Nie dopisuj kodu, o który nie prosiłem. Jeśli coś by się przydało, zaproponuj to, ale nie rób sam.
 
 ## Plan (etapy)
 
@@ -36,7 +39,7 @@ Karol, 18 lat, uczy się programowania (podstawy JavaScript). Pracuje w warsztac
   Aktualizacja strony: `git push` (GitHub Pages sam publikuje gałąź `main` w ok. minutę).
 
 ### Etap 2 — brakujące funkcje dla kierowcy
-- [ ] Pełna historia każdej pozycji (wszystkie wymiany, nie tylko ostatnia).
+- [x] Pełna historia każdej pozycji (wszystkie wymiany, nie tylko ostatnia).
 - [ ] Koszt, warsztat i notatka przy każdym wpisie; podsumowanie kosztów auta.
 - [ ] Eksport historii do PDF (przydatne przy sprzedaży auta).
 - [ ] Eksport/import kopii zapasowej (plik JSON).

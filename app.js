@@ -223,6 +223,39 @@
     }).join('');
   }
 
+  /* ============ HISTORIA WYMIAN ============
+     Każda pozycja ma listę item.history = [{id, date, mileage}] — wszystkie wymiany.
+     Pola lastDate i lastMileage zawsze pokazują NAJNOWSZY wpis z tej listy,
+     bo z nich liczony jest status („za X km”, „po terminie”). */
+
+  // Stare dane nie mają historii — robimy ją z dotychczasowej daty i przebiegu
+  function ensureHistory(item){
+    if(Array.isArray(item.history)) return;
+    item.history = [];
+    if(item.lastDate || item.lastMileage!=null){
+      item.history.push({id:genId(), date:item.lastDate||null, mileage:item.lastMileage!=null?item.lastMileage:null});
+    }
+  }
+
+  // Sortujemy od najnowszej (po dacie, a przy tej samej dacie po przebiegu)
+  // i przepisujemy najnowszy wpis do lastDate / lastMileage
+  function syncLast(item){
+    item.history.sort(function(a,b){
+      var da = a.date || '', db = b.date || '';
+      if(da!==db) return da < db ? 1 : -1;
+      return (b.mileage||0) - (a.mileage||0);
+    });
+    var newest = item.history[0];
+    item.lastDate = newest ? newest.date : null;
+    item.lastMileage = newest ? newest.mileage : null;
+  }
+
+  function ensureHistoryAll(itemsByVehicle){
+    Object.keys(itemsByVehicle).forEach(function(vid){
+      (itemsByVehicle[vid]||[]).forEach(ensureHistory);
+    });
+  }
+
   /* ============ DEMO DATA ============ */
   function buildDemo(){
     var vId = 'demo-v1';
@@ -245,6 +278,7 @@
       {id:'d16', category:'repairs', name:'Wymiana akumulatora (70Ah)', intervalKm:null, intervalMonths:null, lastDate:'2025-11-03', lastMileage:121500, notes:'Rozładowany po mrozach'},
       {id:'d17', category:'repairs', name:'Naprawa układu wydechowego — spawanie', intervalKm:null, intervalMonths:null, lastDate:'2024-06-12', lastMileage:98000, notes:''}
     ];
+    ensureHistoryAll(items);
     return {vehicles:vehicles, items:items};
   }
 
@@ -284,6 +318,7 @@
       if(!data || !Array.isArray(data.vehicles)) return false;
       state.vehicles = data.vehicles;
       state.itemsByVehicle = data.itemsByVehicle || {};
+      ensureHistoryAll(state.itemsByVehicle);
       state.selectedId = state.vehicles[0] ? state.vehicles[0].id : null;
       return true;
     }catch(e){ return false; }
@@ -342,6 +377,7 @@
     addItem: function(vehicleId, data){
       data.createdAt = Date.now();
       data.id = genId();
+      ensureHistory(data); // data i przebieg z formularza = pierwszy wpis w historii
       (state.itemsByVehicle[vehicleId]=state.itemsByVehicle[vehicleId]||[]).push(data);
       if(state.mode==='local') persistLocal();
       render();
@@ -349,7 +385,39 @@
     updateItem: function(vehicleId, itemId, patch){
       var arr = state.itemsByVehicle[vehicleId]||[];
       var it = arr.find(function(x){return x.id===itemId;});
-      if(it) Object.assign(it, patch);
+      if(it){
+        Object.assign(it, patch);
+        // Edycja daty/przebiegu w formularzu poprawia najnowszy wpis w historii
+        if('lastDate' in patch){
+          ensureHistory(it);
+          if(it.history.length){
+            it.history[0].date = patch.lastDate;
+            it.history[0].mileage = patch.lastMileage;
+          } else if(patch.lastDate || patch.lastMileage!=null){
+            it.history.push({id:genId(), date:patch.lastDate, mileage:patch.lastMileage});
+          }
+          syncLast(it);
+        }
+      }
+      if(state.mode==='local') persistLocal();
+      render();
+    },
+    // „Oznacz jako wykonane” — dopisuje nową wymianę, stare zostają
+    addHistoryEntry: function(vehicleId, itemId, entry){
+      var it = (state.itemsByVehicle[vehicleId]||[]).find(function(x){return x.id===itemId;});
+      if(!it) return;
+      ensureHistory(it);
+      entry.id = genId();
+      it.history.push(entry);
+      syncLast(it);
+      if(state.mode==='local') persistLocal();
+      render();
+    },
+    deleteHistoryEntry: function(vehicleId, itemId, entryId){
+      var it = (state.itemsByVehicle[vehicleId]||[]).find(function(x){return x.id===itemId;});
+      if(!it) return;
+      it.history = it.history.filter(function(h){return h.id!==entryId;});
+      syncLast(it);
       if(state.mode==='local') persistLocal();
       render();
     },
@@ -478,6 +546,7 @@
     var isRepair = item.category==='repairs';
     var actionsHtml = '<div class="item-actions">'+
       (isRepair? '' : '<button class="icon-btn done" data-mark-done="'+item.id+'" data-vehicle="'+vehicle.id+'" title="Oznacz jako wykonane">'+icon('check')+'</button>')+
+      (isRepair? '' : '<button class="icon-btn" data-history="'+item.id+'" data-vehicle="'+vehicle.id+'" title="Historia wymian">'+icon('clock')+'</button>')+
       '<button class="icon-btn" data-edit-item="'+item.id+'" data-vehicle="'+vehicle.id+'" title="Edytuj">'+icon('pencil')+'</button>'+
       '<button class="icon-btn danger" data-delete-item="'+item.id+'" data-vehicle="'+vehicle.id+'" title="Usuń">'+icon('trash')+'</button>'+
     '</div>';
@@ -711,12 +780,41 @@
     openModal(html);
     document.querySelector('[data-close]').addEventListener('click', closeModal);
     document.getElementById('confirmDoneBtn').addEventListener('click', function(){
-      var patch = {
-        lastDate: document.getElementById('fDoneDate').value || todayISO(),
-        lastMileage: parseInt(document.getElementById('fDoneKm').value,10) || item.lastMileage
+      var entry = {
+        date: document.getElementById('fDoneDate').value || todayISO(),
+        mileage: parseInt(document.getElementById('fDoneKm').value,10) || item.lastMileage
       };
-      Store.updateItem(vehicleId, item.id, patch);
+      Store.addHistoryEntry(vehicleId, item.id, entry);
       closeModal();
+    });
+  }
+
+  // Okno z listą wszystkich wymian danej pozycji (od najnowszej)
+  function historyModal(vehicleId, item){
+    var rows = item.history.map(function(h){
+      var bits = [fmtDate(h.date)];
+      if(h.mileage!=null) bits.push(fmtNum(h.mileage)+' km');
+      return '<li class="history-row">'+
+        '<span>'+bits.join(' · ')+'</span>'+
+        '<button class="icon-btn danger" data-del-entry="'+h.id+'" title="Usuń wpis">'+icon('trash')+'</button>'+
+      '</li>';
+    }).join('');
+    var html =
+      '<div class="modal-head"><h3>Historia</h3><button class="icon-btn" data-close>'+icon('x')+'</button></div>'+
+      '<div class="modal-body">'+
+        '<p style="margin:0; color:var(--ink-soft); font-size:13.5px;">'+escapeHtml(item.name)+'</p>'+
+        (rows ? '<ul class="history-list">'+rows+'</ul>' : '<p class="item-empty">Brak wpisów</p>')+
+      '</div>';
+    openModal(html);
+    document.querySelector('[data-close]').addEventListener('click', closeModal);
+    document.querySelectorAll('[data-del-entry]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var entryId = btn.getAttribute('data-del-entry');
+        confirmModal('Usunąć ten wpis z historii?', function(){
+          Store.deleteHistoryEntry(vehicleId, item.id, entryId);
+          historyModal(vehicleId, item); // pokazujemy historię ponownie, już bez usuniętego wpisu
+        });
+      });
     });
   }
 
@@ -770,6 +868,13 @@
       var marr = state.itemsByVehicle[mvid]||[];
       var mitem = marr.find(function(x){return x.id===miid;});
       if(mitem) markDoneModal(mvid, mitem);
+      return;
+    }
+    if((t=e.target.closest('[data-history]'))){
+      var hvid = t.getAttribute('data-vehicle');
+      var hiid = t.getAttribute('data-history');
+      var hitem = (state.itemsByVehicle[hvid]||[]).find(function(x){return x.id===hiid;});
+      if(hitem) historyModal(hvid, hitem);
       return;
     }
   });
